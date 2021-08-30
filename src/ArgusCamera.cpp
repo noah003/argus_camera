@@ -95,8 +95,8 @@ ArgusCamera *ArgusCamera::createArgusCamera(const ArgusCameraConfig &config, int
   }
 
   // create stream settings
-  auto streamSettings = UniqueObj<OutputStreamSettings>(iCaptureSession->createOutputStreamSettings(NULL));
-  auto iOutputStreamSettings = interface_cast<IOutputStreamSettings>(streamSettings);
+  auto streamSettings = UniqueObj<OutputStreamSettings>(iCaptureSession->createOutputStreamSettings(STREAM_TYPE_EGL));
+  auto iOutputStreamSettings = interface_cast<IEGLOutputStreamSettings>(streamSettings);
   if (!iOutputStreamSettings) {
     if (info) {
       *info = 6; // failed to create stream settings
@@ -115,7 +115,7 @@ ArgusCamera *ArgusCamera::createArgusCamera(const ArgusCameraConfig &config, int
 
   // create stream
   camera->mStream = UniqueObj<OutputStream>(iCaptureSession->createOutputStream(streamSettings.get(), &status));
-  auto iStream = interface_cast<IStream>(camera->mStream);
+  auto iStream = interface_cast<IEGLOutputStream>(camera->mStream);
   if (!iStream) {
     if (info) {
       *info = 7; // failed to create stream
@@ -259,7 +259,7 @@ ArgusCamera::~ArgusCamera()
     iCaptureSession->waitForIdle();
   }
 
-  auto iStream = interface_cast<IStream>(mStream);
+  auto iStream = interface_cast<IEGLOutputStream>(mStream);
   if (iStream) {
     iStream->disconnect();
   }
@@ -278,7 +278,7 @@ int ArgusCamera::read(uint8_t *data)
 {
   Argus::Status status;
 
-  auto iStream = interface_cast<IStream>(mStream);
+  auto iStream = interface_cast<IEGLOutputStream>(mStream);
   if (!iStream) {
     return 1; // failed to create stream interface
   }
@@ -313,8 +313,8 @@ int ArgusCamera::read(uint8_t *data)
   );
   fd = iNativeBuffer->createNvBuffer(resolution, 
     NvBufferColorFormat::NvBufferColorFormat_YUV420,
-    NvBufferLayout_Pitch, &status);
-  if (Argus::STATUS_OK != status) {
+    NvBufferLayout_Pitch);
+  if (fd == -1) {
     return 6; // failed to create native buffer
   }
 

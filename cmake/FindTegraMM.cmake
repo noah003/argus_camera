@@ -1,4 +1,4 @@
-set(TegraMM_ROOT $ENV{HOME}/tegra_multimedia_api)
+set(TegraMM_ROOT /usr/src/jetson_multimedia_api)
 
 set(TegraMM_FOUND FALSE)
 
@@ -7,7 +7,8 @@ if(EXISTS ${TegraMM_ROOT})
   set(TegraMM_INCLUDE_DIRS ${TegraMM_ROOT}/include ${TegraMM_ROOT}/include/libjpeg-8b /usr/include/libdrm)
   set(TegraMM_INCLUDES ${TegraMM_INCLUDE_DIRS})
   set(TegraMM_LIBRARY_DIRS /usr/lib/aarch64-linux-gnu/tegra /usr/lib/aarch64-linux-gnu)
-  set(TegraMM_LIBRARIES argus nvjpeg drm nvbuf_utils nvosd EGL v4l2 GLESv2 X11 pthread)
+  #set(TegraMM_LIBRARIES argus nvjpeg drm nvbuf_utils nvosd EGL v4l2 GLESv2 X11 pthread)
+  set(TegraMM_LIBRARIES ${ARGUS_LIBRARY} ${V4L2_LIBRARY} ${EGL_LIBRARY} ${DRM_LIBRARY} X11 GLESv2)
   file(GLOB TegraMM_COMMON_SOURCES ${TegraMM_ROOT}/samples/common/classes/*.cpp)
 
   include_directories(${TegraMM_INCLUDE_DIRS})
