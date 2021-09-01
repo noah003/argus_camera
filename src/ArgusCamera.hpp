@@ -4,9 +4,23 @@
 #include <vector>
 #include <memory>
 
+#include "Argus/Argus.h"
+#include "EGLStream/NV/ImageNativeBuffer.h"
+#include "nvbuf_utils.h"
+#include "NvBuffer.h"
+#include "EGLStream/EGLStream.h"
+#include "NvVideoConverter.h"
+
 #define WIDTH_IDX 0
 #define HEIGHT_IDX 1
 #define ONE_SECOND_NANOS 1000000000
+
+struct CameraInfo {
+  uint64_t frame_id;
+  uint64_t time_stamp;
+  uint8_t *left_data;
+  uint8_t *right_data;
+};
 
 class ArgusCameraConfig
 {
@@ -45,23 +59,39 @@ public:
   uint32_t getNumChannels();
 };
 
-ArgusCameraConfig DEFAULT_DEVKIT_CONFIG()
-{
-    ArgusCameraConfig c;
-    c.mDeviceId = 0;
-    c.mSourceClipRect = { 0.0, 0.0, 1.0, 1.0 };
-    c.mStreamResolution = { 640, 480 };
-    c.mVideoConverterResolution = { 640, 480 };
-    c.mFrameDurationRange = { ONE_SECOND_NANOS / 30, ONE_SECOND_NANOS / 30 }; // 30fps
-    c.mSensorMode = 0;
-    return c;
-}
+// ArgusCameraConfig DEFAULT_DEVKIT_CONFIG()
+// {
+//     ArgusCameraConfig c;
+//     c.mDeviceId = 0;
+//     c.mSourceClipRect = { 0.0, 0.0, 1.0, 1.0 };
+//     c.mStreamResolution = { 640, 480 };
+//     c.mVideoConverterResolution = { 640, 480 };
+//     c.mFrameDurationRange = { ONE_SECOND_NANOS / 30, ONE_SECOND_NANOS / 30 }; // 30fps
+//     c.mSensorMode = 0;
+//     return c;
+// }
 
 class IArgusCamera
 {
 public:
   static IArgusCamera *createArgusCamera(const ArgusCameraConfig &config, int *info=nullptr);
   virtual ~IArgusCamera() {};
-  virtual int read(uint8_t *data) = 0;
+  virtual int read(CameraInfo *camera_info) = 0;
 };
 
+class ArgusCamera : public IArgusCamera
+{
+public:
+  static ArgusCamera *createArgusCamera(const ArgusCameraConfig &config, int *info=nullptr);
+  ~ArgusCamera();
+  int read(CameraInfo *camera_info) override;
+
+private:
+  ArgusCameraConfig mConfig;
+
+  Argus::UniqueObj<Argus::CaptureSession> mCaptureSession;
+  std::vector<Argus::CameraDevice*> devices;
+  std::vector<Argus::UniqueObj<Argus::OutputStream> *> mStreams;
+  std::vector<Argus::UniqueObj<EGLStream::FrameConsumer> *> mFrameConsumers;
+  NvVideoConverter *mVideoConverter;
+};

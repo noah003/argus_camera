@@ -5,6 +5,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(TegraMM REQUIRED)
+find_package(OpenCV REQUIRED)
+
 if(${TegraMM_FOUND})
   message(STATUS "Found Tegra Multimedia API")
 else()
@@ -16,9 +18,24 @@ add_library(argus_camera SHARED
   ${TegraMM_COMMON_SOURCES}
 )
 
-target_link_libraries(argus_camera ${TegraMM_LIBRARIES})
-set_target_properties(argus_camera PROPERTIES PUBLIC_HEADER 
-  "src/ArgusCamera.hpp"
+#target_link_libraries(argus_camera ${TegraMM_LIBRARIES} /usr/lib/aarch64-linux-gnu/tegra/libnvargus.so)
+#set_target_properties(argus_camera PROPERTIES PUBLIC_HEADER 
+#  "src/ArgusCamera.hpp"
+#)
+
+add_executable(test_argus_camera
+  src/ArgusCamera.cpp
+  src/test.cpp
+  ${TegraMM_COMMON_SOURCES}
+)
+target_include_directories(test_argus_camera
+  PRIVATE
+  ${OpenCV_INCLUDE_DIRECTORIES}
+)
+target_link_libraries(test_argus_camera 
+  ${TegraMM_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  /usr/lib/aarch64-linux-gnu/tegra/libnvargus.so
 )
 
 install(TARGETS argus_camera
